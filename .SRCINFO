@@ -1,0 +1,26 @@
+pkgbase = syn-settings
+	pkgdesc = SynapseOS settings: displays and resolution, keyboard and language, date and time, network, Bluetooth, power and sleep, kernels, and where configuration lives
+	pkgver = 0.1.0
+	pkgrel = 40
+	url = https://github.com/velle999/SYNAPSE
+	arch = x86_64
+	license = GPL-2.0-or-later
+	makedepends = meson
+	makedepends = ninja
+	makedepends = gcc
+	depends = glibc
+	depends = wlr-randr
+	optdepends = quickshell: the settings window (syn-settings gui)
+	optdepends = systemd: localectl, timedatectl and systemctl — the Region and Power panes
+	optdepends = synui: synctl, for what the compositor is actually driving
+	optdepends = networkmanager: nmcli — the Network pane
+	optdepends = bluez-utils: bluetoothctl — the Bluetooth pane
+	optdepends = util-linux: rfkill — soft and hard radio blocks
+	optdepends = synpkg: install and remove kernels from the Kernel pane
+	optdepends = pacman: which kernels are installed
+	optdepends = fprintd: the Fingerprint pane — enrol a finger for the lock screen
+	optdepends = polkit: change settings without dropping to a root shell
+	source = syn-settings-0.1.0.tar.gz::https://github.com/velle999/SYNAPSE/releases/download/syn-settings-0.1.0-40/syn-settings-0.1.0.tar.gz
+	sha256sums = SKIP
+
+pkgname = syn-settings

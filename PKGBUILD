@@ -1,0 +1,182 @@
+# Maintainer: Velle Sinclair <brncomputerhelp@gmail.com>
+#
+# syn-settings — SynapseOS system settings.
+pkgname=syn-settings
+# pkgver stays 0.1.0 and releases move pkgrel, which is the convention every
+# SynapseOS component follows — but here it is a HARD constraint, not a habit:
+# build-all.sh writes "$name-0.1.0.tar.gz" and transforms paths to
+# "$name-0.1.0/" for every component it builds. Bumping pkgver without changing
+# that leaves makepkg looking for a tarball nothing creates.
+pkgver=0.1.0
+# 30: an AI pane, because AI was reachable from exactly one place — synui's
+#   control panel. The installer offers KDE and GNOME, and on either of them
+#   there was no way to see whether synapd was running, no way to turn it off,
+#   and no way to find out which model it would load. The daemon was still
+#   there holding GPU memory; only the switch was missing.
+#   ⚠ IT DOES NOT REIMPLEMENT THE SWITCH. Turning the AI off correctly is four
+#   closed resurrection paths deep — socket activation, the LAN bridge socket,
+#   three separate Wants=, and a reboot — so `off` MASKS synapd.socket and
+#   synapd.service and records the choice outside /run. All of that is
+#   synui-ai-backend(1), covered by synui's tests/ai_backend_off.sh, and this
+#   pane calls it. A second implementation of "off must hold" is a second thing
+#   to get wrong, and the first took four attempts.
+#   The pane names the SOCKETS as well as the service: a pane that showed only
+#   synapd.service would read "inactive" on a machine where the next message
+#   anybody sends starts it again.
+#   ⚠ The acceleration row is enumerated from the ggml backend libraries in
+#   /usr/lib, not from a guessed per-variant directory. The first draft looked
+#   for /usr/lib/synapse-llama/cuda and reported "no build found" on a machine
+#   running synapse-llama-cuda — the packages install into /usr/bin and
+#   /usr/lib and no such directory has ever existed. Same trap power.c
+#   documents for the sleep hooks.
+# 31: the Network pane's firewall rows say what the firewall IS. They said
+#   "ruleset: not read" before, with an honest note that `nft list` needs root
+#   — honest and useless: the box HAS a default-drop input firewall and the
+#   pane could not say so, which is the same silence that had it believed
+#   missing. synnet publishes its state world-readable now, so the rows report
+#   the PREFERENCE, the STATE and the SERVICE separately, and the row carries
+#   `choice:firewall` — on/off through `pkexec synnet --firewall`, never by
+#   writing synnet's files from here.
+#   ⚠ ABSENT PREFERENCE MEANS ON, the same rule synnet applies. Reading a
+#   missing file as "off" would report an unfiltered machine that is filtered.
+#   ⚠ Nothing here reads the kernel: "what synnet believes" is not "what
+#   nftables holds", and presenting the first as the second is the claim this
+#   area already got wrong once.
+# 32: a "container links" row in the Network pane, because the firewall's effect
+#   on a container is INVISIBLE and does not look like a firewall. A Waydroid or
+#   libvirt guest lives on 192.168.x, which the LAN-trust rule accepts — but the
+#   DHCP request that gets it that address is sent from 0.0.0.0, matches no
+#   accept, and the default-drop policy eats it. The guest comes up with no
+#   network and nothing in any log says firewall, so people go looking at the
+#   container, at DNS, at the bridge. The row lists what
+#   /etc/synnet/trusted-ifaces names and warns when synnet has not loaded it.
+#   ⚠ It reads the FILE, not the published count, so a bridge added but not
+#   applied shows as itself rather than as an absence — that mismatch is exactly
+#   the state worth reporting, since synnet only rebuilds a chain that has GONE
+#   and one that is merely out of date looks healthy to it.
+#   ⚠ And a mismatch while the firewall is OFF is not a warning: that is the
+#   definition of off, not a fault.
+#
+# 33 THE MACHINE'S NAME, AND THE LIGHTS.
+#
+#   ⚠ EVERY SynapseOS install answers to `synapse`. Two of them on one network
+#   and Avahi renames one `synapse-2.local`, with no say in which and no
+#   promise the suffix survives a reboot — so the .local address stops being a
+#   thing anybody can rely on. Renaming was a `hostnamectl` one-liner, which is
+#   to say it was not in the settings app at all.
+#
+#   `set:hostname` on the System pane's identity row, `hostnamectl
+#   set-hostname` underneath it. That keeps the design this file has had from
+#   the first commit: the write goes through a systemd tool that does its OWN
+#   polkit check, and this binary stays not-setuid with no policy of its own.
+#
+#   ⚠ Validated HERE and more narrowly than sane_value, which allows `/`
+#   because most values here are paths. A hostname is letters, digits, hyphen
+#   and dot, no leading or trailing punctuation, 63 characters — and refusing
+#   it here says what was wrong with what was typed, where refusing it in
+#   systemd says "hostnamectl exited 1".
+#
+#   AND THE RGB LIGHTS. syn-rgb(1) — synui 431 — puts the wallpaper's accent on
+#   the RAM, the board and the keyboard. The switch is a row on this pane and a
+#   row on synui's control panel, and BOTH run the same command: syn-rgb owns
+#   the state file, the systemd path unit and the hardware, so neither door has
+#   an opinion of its own to drift.
+#
+#   ⚠ The row reads rgb.state on every pane load rather than caching it, so
+#   `syn-rgb on` typed in a terminal moves it. ⛔ And it is drawn whether
+#   openrgb is installed or not — a control that vanishes with its optdepend is
+#   a feature nobody finds out about — saying which package to install instead.
+# 34: the speech pane — the second door onto the two switches an
+#   accessibility user needs first.
+#   synui's control panel got them in synui 530; this is the other door, and it
+#   is the one that matters on a machine installed with KDE or GNOME, where
+#   synui's panel is not there at all. Screen reader, "Answer to its name", the
+#   voice and dictation engines this box actually has, speech rate and volume,
+#   and the wake words.
+#   ⚠ IT REIMPLEMENTS NOTHING. syn-speak(1) owns the announcer and vibe(1) owns
+#   the listener; this reads their state files and runs their commands. The AI
+#   pane's rule, for the same reason.
+#   ⛔ THE WAKE ROW READS assistant.state, NOT `systemctl is-active`. A unit can
+#   be active with its listener failing to open the device, and the question
+#   this row answers is whether a MICROPHONE IS OPEN. synui's bar indicator and
+#   its control panel row read the same file — one fact, three surfaces.
+#   ⛔ AND A DEAD BUTTON WAS FOUND BY TESTING THE ROW'S OWN ADVICE. `wake-words`
+#   is the one value in this app that legally contains commas, and set()'s
+#   generic sane_value() gate rejects a comma before any key is looked at — so
+#   the row offered a comma-separated list and refused every comma. Lifted
+#   above the gate with a validator of its own (letters, commas, spaces);
+#   loosening sane_value would have weakened it for the thirty keys that DO
+#   exec. The test now sets each key to the value its own help text suggests,
+#   which is the check that would have caught it.
+pkgrel=40
+pkgdesc="SynapseOS settings: displays and resolution, keyboard and language, date and time, network, Bluetooth, power and sleep, kernels, and where configuration lives"
+arch=('x86_64')
+url="https://github.com/velle999/SYNAPSE"
+license=('GPL-2.0-or-later')
+
+# wlr-randr is a hard dependency, not an optional one: it is the only way this
+# app can change a resolution, and "Settings cannot change your resolution
+# until you install something" is not a settings app. It is 28 KB, and on a
+# headless box it simply never runs.
+#
+# Everything else stays optional. Each answer comes from a tool that already
+# owns it, and each pane degrades to "not installed" rather than failing, so
+# this still works over SSH and on the ISO.
+depends=('glibc' 'wlr-randr')
+makedepends=('meson' 'ninja' 'gcc')
+
+optdepends=('quickshell: the settings window (syn-settings gui)'
+            'systemd: localectl, timedatectl and systemctl — the Region and Power panes'
+            'synui: synctl, for what the compositor is actually driving'
+            'networkmanager: nmcli — the Network pane'
+            'bluez-utils: bluetoothctl — the Bluetooth pane'
+            'util-linux: rfkill — soft and hard radio blocks'
+            'synpkg: install and remove kernels from the Kernel pane'
+            'pacman: which kernels are installed'
+            # The Fingerprint pane reads what it can without this — it says
+            # "not installed", which is the honest answer and the one every
+            # desktop without a reader gets. Enrolling needs the CLIs.
+            'fprintd: the Fingerprint pane — enrol a finger for the lock screen'
+            'polkit: change settings without dropping to a root shell')
+
+# ── Where the source comes from, here and everywhere else ──────────────────
+#
+# ⛔ ONE source LINE SERVES BOTH, AND THAT IS DELIBERATE. build-all.sh runs
+# tools/collect-source.sh, which drops $pkgname-$pkgver.tar.gz beside this file;
+# makepkg finds it (`-> Found ...`) and never touches the URL. Anybody WITHOUT
+# this checkout has no such file, so makepkg fetches the identical tarball from
+# the release that carries this exact pkgver-pkgrel. A second PKGBUILD for
+# outside use would be a second set of depends and install rules, free to drift
+# from this one — and the person it broke for could not see this file at all.
+#
+# ⚠ THE TAG CARRIES THE pkgrel, so the URL cannot point at the wrong source.
+# preflight.sh already refuses a source edit that does not bump pkgrel, which
+# means every change to what gets built moves this URL with it.
+#
+# ⛔ AND sha256sums STAYS 'SKIP'. A real checksum would break every LOCAL build
+# the moment somebody edited a source file, because the tarball beside this file
+# is regenerated from the working tree and would no longer match. The published
+# asset is reproducible instead — collect-source.sh sorts and zeroes the
+# timestamps, so `tools/collect-source.sh <name>` at the tagged commit
+# re-derives it byte for byte. packaging/README.md has the whole of it.
+source=("$pkgname-$pkgver.tar.gz::https://github.com/velle999/SYNAPSE/releases/download/$pkgname-$pkgver-$pkgrel/$pkgname-$pkgver.tar.gz")
+sha256sums=('SKIP')
+
+build() {
+    cd "$srcdir/syn-settings-0.1.0"
+    meson setup build --prefix=/usr --buildtype=release
+    meson compile -C build
+}
+
+check() {
+    cd "$srcdir/syn-settings-0.1.0"
+    # Read-only, and the write paths are exercised only through --dry-run. A
+    # package that changed the build machine's timezone while being built would
+    # be a memorable bug.
+    meson test -C build --print-errorlogs
+}
+
+package() {
+    cd "$srcdir/syn-settings-0.1.0"
+    DESTDIR="$pkgdir" meson install -C build
+}
