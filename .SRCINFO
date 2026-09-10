@@ -1,7 +1,7 @@
 pkgbase = syn-settings
 	pkgdesc = SynapseOS settings: displays and resolution, keyboard and language, date and time, network addresses and interfaces, Bluetooth, power and sleep, kernels, and where configuration lives
 	pkgver = 0.1.0
-	pkgrel = 52
+	pkgrel = 53
 	url = https://github.com/velle999/SYNAPSE
 	arch = x86_64
 	license = GPL-2.0-or-later
@@ -19,8 +19,9 @@ pkgbase = syn-settings
 	optdepends = synpkg: install and remove kernels from the Kernel pane
 	optdepends = pacman: which kernels are installed
 	optdepends = fprintd: the Fingerprint pane — enrol a finger for the lock screen
+	optdepends = syn-scan: the Malware Scanning pane
 	optdepends = polkit: change settings without dropping to a root shell
-	source = syn-settings-0.1.0.tar.gz::https://github.com/velle999/syn-settings/releases/download/0.1.0-52/syn-settings-0.1.0.tar.gz
+	source = syn-settings-0.1.0.tar.gz::https://github.com/velle999/syn-settings/releases/download/0.1.0-53/syn-settings-0.1.0.tar.gz
 	sha256sums = SKIP
 
 pkgname = syn-settings
